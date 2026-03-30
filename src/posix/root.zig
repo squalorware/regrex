@@ -1,7 +1,5 @@
 /// This module exports Zig wrappers over POSIX regular expressions implementation in glibc
-const std = @import("std");
-const mem = std.mem;
-const testing = std.testing;
+const mem = @import("std").mem;
 
 const regex = @import("regex.zig");
 const Regex = regex.Regex;
