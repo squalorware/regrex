@@ -5,23 +5,51 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const lib_posix_mod = b.addModule("posix", .{
-        .root_source_file = b.path("src/lib_posix/root.zig"),
+    const posix_mod = b.addModule("posix", .{
+        .root_source_file = b.path("src/posix/root.zig"),
+    });
+    posix_mod.addCSourceFile(.{ .file = b.path("include/posix/regrex.c") });
+    posix_mod.addIncludePath(b.path("include/posix"));
+
+    const lib_mod = b.createModule(.{
+        .target = target,
+        .optimize = optimize,
+        .root_source_file = b.path("src/root.zig"),
+        .imports = &.{
+            .{ .name = "posix", .module = posix_mod }
+        }
     });
 
     const lib = b.addLibrary(.{
         .name = "regrex",
         .linkage = .static,
-        .root_module = b.createModule(.{
-            .target = target,
-            .optimize = optimize,
-            .root_source_file = b.path("src/root.zig"),
-            .imports = &.{
-                .{ .name = "posix", .module = lib_posix_mod }
-            }
-        })
+        .root_module = lib_mod
     });
-    lib.root_module.addIncludePath(b.path("include"));
+    lib.linkLibC();
 
     b.installArtifact(lib);
+
+    const install_docs = b.addInstallDirectory(.{
+        .source_dir = lib.getEmittedDocs(),
+        .install_dir = .prefix,
+        .install_subdir = "docs",
+    });
+    const docs_step = b.step("docs", "Generate documentation");
+    docs_step.dependOn(&install_docs.step);
+
+    const testing_step = b.step("test", "Run all tests");
+
+    const posix_regex_test_mod = b.createModule(.{
+        .root_source_file = b.path("src/posix/regex.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    posix_regex_test_mod.addCSourceFile(.{ .file = b.path("include/posix/regrex.c") });
+    posix_regex_test_mod.addIncludePath(b.path("include/posix"));
+
+    const test_posix_regex = b.addTest(.{
+        .root_module = posix_regex_test_mod,
+    });
+    test_posix_regex.linkLibC();
+    testing_step.dependOn(&b.addRunArtifact(test_posix_regex).step);
 }
