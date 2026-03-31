@@ -66,9 +66,25 @@ extern "C" {
 #define REG_STARTEND (1 << 2)
 #endif
 
-/* Exposed externally regex_t data structure memory size */
-// size_t sizeof_regex_t(void);
-extern const size_t sizeof_regex_t;
+/*
+    Custom error definitions
+    Copies POSIX implementation for API consistency
+*/
+typedef enum : signed int { 
+    _REGX_ILLSEQ = 17,
+    _REGX_BADGRP,
+    _REGX_EGRPLMT
+} regrex_errcode_t;
+
+#define REGX_ILLSEQ _REGX_ILLSEQ
+#define REGX_BADGRP _REGX_BADGRP
+#define REGX_EGRPLMT _REGX_EGRPLMT
+
+regex_t* regrex_create(void);
+
+void regrex_destroy(regex_t* re);
+
+size_t regrex_error(regrex_errcode_t errcode, char *errbuf, size_t errbuf_size);
 
 /* Define semver */
 #define REGREX_VERSION_MAJOR 0
