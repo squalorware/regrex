@@ -1,15 +1,19 @@
-/// This module exports Zig wrappers over POSIX regular expressions implementation in glibc
-const mem = @import("std").mem;
+/// Zig wrapper over POSIX `regex.h` library
+const Allocator = @import("std").mem.Allocator;
 
-const regex = @import("regex.zig");
-const Regex = regex.Regex;
+const clib = @import("lib/c_api.zig");
+const pattern = @import("lib/pattern.zig");
 
-pub const flags = @import("flags.zig");
-/// Bit flags parsing errors
-pub const FlagsError = flags.Error;
-/// Regex compilation and execution errors
-pub const RegexError = regex.Error;
-pub const PosixRegexError = regex.PosixRegexError;
-pub const RegexPatternBuffer = regex.RegexPatternBuffer;
-pub const compile: fn (mem.Allocator, []const u8, c_int) PosixRegexError!Regex = regex.compile;
-pub const getErrorString: fn (mem.Allocator, RegexError, *RegexPatternBuffer) mem.Allocator.Error.OutOfMemory![]u8 = regex.getErrorString;
+pub const Error = @import("lib/errors.zig");
+pub const Flags = @import("lib/flags.zig");
+
+pub const compile: fn (Allocator, []const u8, c_int) Error!pattern.Pattern = pattern.compile;
+
+test {
+    _ = @import("lib/c_api.zig");
+    _ = @import("lib/errors.zig");
+    _ = @import("lib/exec.zig");
+    _ = @import("lib/flags.zig");
+    _ = @import("lib/match.zig");
+    _ = @import("lib/pattern.zig");
+}
